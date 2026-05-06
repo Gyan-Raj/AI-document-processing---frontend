@@ -6,9 +6,9 @@ import { useState } from "react";
 export default function SignUp() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userDetails, setUserDetails] = useState({
-    userName: "",
-    userEmail: "",
-    userPassword: "",
+    user_name: "",
+    user_email: "",
+    user_password: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -48,37 +48,37 @@ export default function SignUp() {
         onSubmit={handleSignUp}
       >
         <div className="flex flex-col justify-center gap-2">
-          <label htmlFor="userName">Name</label>
+          <label htmlFor="user_name">Name</label>
           <input
             type="text"
-            name="userName"
-            id="userName"
+            name="user_name"
+            id="user_name"
             className="focus:outline-0 border border-gray-400 w-full sm:w-[80%] lg:w-[60%] px-2 py-1"
-            value={userDetails.userName}
+            value={userDetails.user_name}
             onChange={handleChange}
             disabled={isSubmitting}
           />
         </div>
         <div className="flex flex-col justify-center gap-2">
-          <label htmlFor="userEmail">Username/Email</label>
+          <label htmlFor="user_email">User name/Email</label>
           <input
             type="email"
-            name="userEmail"
-            id="userEmail"
+            name="user_email"
+            id="user_email"
             className="focus:outline-0 border border-gray-400 w-full sm:w-[80%] lg:w-[60%] px-2 py-1"
-            value={userDetails.userEmail}
+            value={userDetails.user_email}
             onChange={handleChange}
             disabled={isSubmitting}
           />
         </div>
         <div className="flex flex-col justify-center gap-2">
-          <label htmlFor="userPassword">Password</label>
+          <label htmlFor="user_password">Password</label>
           <input
             type="password"
-            name="userPassword"
-            id="userPassword"
+            name="user_password"
+            id="user_password"
             className="focus:outline-0 border border-gray-400 w-full sm:w-[80%] lg:w-[60%] px-2 py-1"
-            value={userDetails.userPassword}
+            value={userDetails.user_password}
             onChange={handleChange}
             disabled={isSubmitting}
           />

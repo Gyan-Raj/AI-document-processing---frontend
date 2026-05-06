@@ -8,5 +8,7 @@ export const DOCUMENT = "/document";
 export const RUN_ASSESSMENT_AND_GENERATE_SUMMARY =
   "/run-assessment-and-generate-summary";
 export const ALL_PROJECTS = "/all-projects";
+export const RECENT_PROJECTS = "/recent-projects";
+export const GET_PROJECT_BY_QUERY = (query: string) => `/all-projects?query=${query}`;
 export const DOWNLOAD_RISK_SUMMARY = (id: string) =>
   `/download-risk-summary/${id}`;

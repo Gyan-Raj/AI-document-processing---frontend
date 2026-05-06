@@ -6,11 +6,13 @@ import {
   DOCUMENT,
   DOWNLOAD_RISK_SUMMARY,
   GET_PROJECT_BY_ID,
+  GET_PROJECT_BY_QUERY,
+  RECENT_PROJECTS,
   RUN_ASSESSMENT_AND_GENERATE_SUMMARY,
 } from "@/lib/api/config";
 import { FolderStructureTypes } from "@/store/folderStructure.store";
 
-export const createProject = async (data: { projectName: string }) => {
+export const createProject = async (data: { project_name: string }) => {
   try {
     const res = await axiosInstance.post(CREATE_PROJECT, data);
     return res.data;
@@ -21,7 +23,9 @@ export const createProject = async (data: { projectName: string }) => {
 
 export const deleteProject = async (data: { project_id: string }) => {
   try {
-    const res = await axiosInstance.delete(DELETE_PROJECT_BY_ID(data.project_id));
+    const res = await axiosInstance.delete(
+      DELETE_PROJECT_BY_ID(data.project_id),
+    );
     return res.data;
   } catch (error: any) {
     throw error.response?.data || error; // Catch errors in service only if you transform
@@ -94,6 +98,15 @@ export const getProjectDetails = async (data: { project_id: string }) => {
   }
 };
 
+export const searchProject = async (data: { query: string }) => {
+  try {
+    const res = await axiosInstance.get(GET_PROJECT_BY_QUERY(data.query));
+    return res.data;
+  } catch (error: any) {
+    throw error.response?.data || error; // Catch errors in service only if you transform
+  }
+};
+
 export const runAssessmentAndGenerateRiskSummary = async (data: {
   project_id: string;
 }) => {
@@ -129,6 +142,15 @@ export const downloadRiskSummary = async ({
 export const getAllProjects = async () => {
   try {
     const res = await axiosInstance.get(ALL_PROJECTS);
+    return res.data;
+  } catch (error: any) {
+    throw error.response?.data || error; // Catch errors in service only if you transform
+  }
+};
+
+export const getRecentProjects = async () => {
+  try {
+    const res = await axiosInstance.get(RECENT_PROJECTS);
     return res.data;
   } catch (error: any) {
     throw error.response?.data || error; // Catch errors in service only if you transform

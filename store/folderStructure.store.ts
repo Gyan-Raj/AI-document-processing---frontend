@@ -23,7 +23,12 @@ type FolderStore = {
     type: "contract" | "config",
   ) => void;
 
-  removeFile: (folderName: string, fileName: string) => void;
+  removeFile: (
+    index: number,
+    folderName: string,
+    fileName: string,
+    type: string,
+  ) => void;
 
   reset: () => void;
 };
@@ -95,14 +100,21 @@ export const useFolderStructureStore = create<FolderStore>((set) => ({
     })),
 
   // ✅ Remove file (using folderName + fileName)
-  removeFile: (folderName, fileName) =>
+  removeFile: (index, folderName, fileName, type) =>
     set((state) => ({
       folderStructure: state.folderStructure.map((folder) => {
         if (folder.folderName !== folderName) return folder;
+        console.log(
+          index,
+          folderName,
+          fileName,
+          type,
+          "index, folderName, fileName, type",
+        );
 
         return {
           ...folder,
-          files: folder.files.filter((f) => f.fileName !== fileName),
+          files: folder.files.filter((_, idx) => idx !== index),
         };
       }),
     })),

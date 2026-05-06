@@ -19,9 +19,11 @@ export type UploadedFolderStructureTypes = {
 export default function UploadedFolderStructure({
   folder_structure,
   refreshUIFunc,
+  isDisabled,
 }: {
   folder_structure: UploadedFolderStructureTypes[];
   refreshUIFunc?: () => void;
+  isDisabled: boolean;
 }) {
   const params = useParams();
   const project_id = Array.isArray(params["project-id"])
@@ -31,6 +33,7 @@ export default function UploadedFolderStructure({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [activeType, setActiveType] = useState<"contract" | "config" | null>(
     null,
   );
@@ -48,7 +51,7 @@ export default function UploadedFolderStructure({
           deleteDocument({
             doc_id: f.id,
             doc_type: f.type,
-            project_id
+            project_id,
           }),
         ),
       );
@@ -81,7 +84,7 @@ export default function UploadedFolderStructure({
       await deleteDocument({
         doc_id,
         doc_type,
-        project_id
+        project_id,
       });
       refreshUIFunc && refreshUIFunc();
     } catch (error) {
@@ -111,7 +114,7 @@ export default function UploadedFolderStructure({
           await deleteDocument({
             doc_id: configId,
             doc_type: activeType,
-            project_id
+            project_id,
           });
         }
 
@@ -166,7 +169,8 @@ export default function UploadedFolderStructure({
                     onClick={() =>
                       handleTriggerUpload(str.folderName, "contract")
                     }
-                    className="bg-green-500 px-3 py-1 rounded text-white cursor-pointer"
+                    disabled={isLoading || isDisabled}
+                    className={`rounded-md px-2 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isLoading || isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-green-500 hover:bg-green-600"}`}
                   >
                     Add contract
                   </button>
@@ -175,7 +179,8 @@ export default function UploadedFolderStructure({
                     onClick={() =>
                       handleTriggerUpload(str.folderName, "config")
                     }
-                    className="bg-green-500 px-3 py-1 rounded text-white cursor-pointer"
+                    className={`rounded-md px-2 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isLoading || isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-green-500 hover:bg-green-600"}`}
+                    disabled={isLoading || isDisabled}
                   >
                     {str.files.some((f) => f.type === "config")
                       ? "Replace config file"
@@ -184,7 +189,8 @@ export default function UploadedFolderStructure({
 
                   <button
                     onClick={() => handleDeleteFolder(str.folderName)}
-                    className="bg-red-400 px-3 py-1 rounded text-white cursor-pointer"
+                    className={`rounded-md px-2 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isLoading || isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-green-500 hover:bg-green-600"}`}
+                    disabled={isLoading || isDisabled}
                   >
                     Delete Folder
                   </button>
@@ -201,8 +207,9 @@ export default function UploadedFolderStructure({
                   <div className="flex justify-between">
                     <span>{f.fileName}</span>
                     <button
-                      className="bg-red-400 px-3 py-1 rounded text-white cursor-pointer"
+                      className={`rounded-md px-2 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isLoading || isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-red-500 hover:bg-red-600"}`}
                       onClick={() => f.id && handleDeleteFile(f.id, f.type)}
+                      disabled={isLoading || isDisabled}
                     >
                       Delete {f.type}
                     </button>

@@ -53,14 +53,15 @@ export default function ProtectedLayout({
       <header className="flex items-center justify-between py-2 px-4 border border-b-gray-400">
         <button
           onClick={() => router.push("/dashboard")}
-          className="cursor-pointer bg-gray-200 px-4 py-2 rounded-full"
+          className="rounded-md px-4 py-2 text-sm font-medium text-white transition  active:scale-95 cursor-pointer bg-green-500 hover:bg-green-600"
+          // className="cursor-pointer bg-gray-200 px-4 py-2 rounded-full"
         >
           Home
         </button>
-        <h3>Hi, {userInfo?.userName}</h3>
+        <h3>Hi, {userInfo?.user_name}</h3>
         <button
           onClick={handleLogout}
-          className="bg-red-500 text-white px-4 py-2 rounded cursor-pointer"
+          className="rounded-md bg-red-500 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-600 active:scale-95 cursor-pointer"
         >
           Logout
         </button>

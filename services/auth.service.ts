@@ -2,9 +2,9 @@ import axiosInstance from "@/lib/api/axios-instance";
 import { LOGIN, LOGOUT, SIGN_UP } from "@/lib/api/config";
 
 export const signup = async (data: {
-  userName: string;
-  userEmail: string;
-  userPassword: string;
+  user_name: string;
+  user_email: string;
+  user_password: string;
 }) => {
   try {
     const res = await axiosInstance.post(SIGN_UP, data);
@@ -15,8 +15,8 @@ export const signup = async (data: {
 };
 
 export const login = async (data: {
-  userEmail: string;
-  userPassword: string;
+  user_email: string;
+  user_password: string;
 }) => {
   try {
     const res = await axiosInstance.post(LOGIN, data);

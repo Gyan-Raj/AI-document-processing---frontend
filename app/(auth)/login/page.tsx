@@ -10,8 +10,8 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [userDetails, setUserDetails] = useState({
-    userEmail: "",
-    userPassword: "",
+    user_email: "",
+    user_password: "",
   });
   const router = useRouter();
   const { setUserInfo } = useUserDetails();
@@ -54,25 +54,25 @@ export default function Login() {
         {error && <p className="text-red-500 text-sm">{error}</p>}{" "}
         {/* ✅ show errors */}
         <div className="flex flex-col gap-2">
-          <label htmlFor="userEmail">Email</label>
+          <label htmlFor="user_email">Email</label>
           <input
             type="email"
-            name="userEmail"
-            id="userEmail"
+            name="user_email"
+            id="user_email"
             className="focus:outline-0 border border-gray-400 w-full sm:w-[80%] lg:w-[60%] px-2 py-1"
-            value={userDetails.userEmail}
+            value={userDetails.user_email}
             onChange={handleChange}
             disabled={isSubmitting}
           />
         </div>
         <div className="flex flex-col gap-2">
-          <label htmlFor="userPassword">Password</label>
+          <label htmlFor="user_password">Password</label>
           <input
             type="password" // ✅ fixed from "text"
-            name="userPassword"
-            id="userPassword"
+            name="user_password"
+            id="user_password"
             className="focus:outline-0 border border-gray-400 w-full sm:w-[80%] lg:w-[60%] px-2 py-1"
-            value={userDetails.userPassword}
+            value={userDetails.user_password}
             onChange={handleChange}
             disabled={isSubmitting}
           />

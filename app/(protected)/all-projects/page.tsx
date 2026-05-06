@@ -1,37 +1,53 @@
 "use client";
 
-import { deleteProject, getAllProjects } from "@/services/project.service";
+import ProjectsTable from "@/app/components/ProjectsTable";
+import useDebounce from "@/hooks/useDebounce";
+import {
+  deleteProject,
+  getAllProjects,
+  searchProject,
+} from "@/services/project.service";
+import { formatDateToLocal } from "@/utils/helper";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type ProjectType = {
+export type ProjectType = {
   id: string;
   project_name: string;
-  contract_path: string | null;
-  risk_path: string | null;
-  contract_name: string | null;
+  created_at: string;
+  updated_at: string;
 };
 export default function AllProjects() {
   const [projects, setProjects] = useState<ProjectType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+  const [queryText, setQueryText] = useState<string | null>("");
   const router = useRouter();
 
+  const debouncedSearch = useDebounce(queryText ?? "", 500);
+
   const fetchAllProjects = async () => {
-    setIsLoading(true);
     try {
-      const res = await getAllProjects();
-      setProjects(res.projects);
+      if (!debouncedSearch) {
+        setIsLoading(true);
+        const res = await getAllProjects();
+        setProjects(res.projects);
+      } else {
+        setIsSearching(true);
+        const res = await searchProject({ query: debouncedSearch });
+        setProjects(res.projects); // ✅ FIX
+      }
     } catch (error) {
-      console.error("Error fetching project details", error);
+      console.error("Error fetching projects", error);
     } finally {
       setIsLoading(false);
+      setIsSearching(false);
     }
   };
 
   useEffect(() => {
     fetchAllProjects();
-  }, []);
-  if (isLoading) return <>Loading...</>;
+  }, [debouncedSearch]);
 
   const handleSelectProject = (id: string) => {
     router.push(`/project/${id}`);
@@ -48,9 +64,19 @@ export default function AllProjects() {
 
   return (
     <div className="flex flex-col w-full h-full px-4 py-2">
+      <input
+        type="text"
+        name="user_name"
+        id="user_name"
+        className="focus:outline-0 border border-gray-400 w-full px-2 py-1 rounded-xl mb-2"
+        value={queryText ?? ""}
+        onChange={(e) => setQueryText(e.target.value)}
+        disabled={isSearching}
+        placeholder="Search through the projects based on project_id, or project_name"
+      />
       {projects.length <= 0 ? (
         <>
-          No project to show
+          {isSearching ? "Searching..." : "No project to show"}
           <button
             className="bg-gray-400 cursor-pointer text-white py-2 mt-2 disabled:opacity-50"
             onClick={() => router.push("/dashboard")}
@@ -59,29 +85,11 @@ export default function AllProjects() {
           </button>
         </>
       ) : (
-        <ol className="list-decimal pl-5 divide-y divide-gray-200">
-          {projects.map((project) => (
-            <li key={project.id}>
-              <div className="flex justify-between my-2 items-center">
-                {project.project_name}
-                <div className="flex gap-2">
-                  <button
-                    className="text-white px-4 py-1 rounded bg-green-500 cursor-pointer"
-                    onClick={() => handleSelectProject(project.id)}
-                  >
-                    Open
-                  </button>
-                  <button
-                    className="text-white px-4 py-1 rounded bg-red-500 cursor-pointer"
-                    onClick={() => handleDeleteProject(project.id)}
-                  >
-                    Delete Project
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ol>
+        <ProjectsTable
+          projects={projects}
+          handleDeleteProject={handleDeleteProject}
+          handleSelectProject={handleSelectProject}
+        />
       )}
     </div>
   );

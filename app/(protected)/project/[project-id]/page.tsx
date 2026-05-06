@@ -35,7 +35,11 @@ export default function Project() {
     ? params["project-id"][0]
     : params["project-id"];
   if (!project_id) return <>Loading...</>;
+  const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGlobalConfigUploading, setIsGlobalConfigloading] = useState(false);
+  const [uploadError, setUploadError] = useState<null | string>(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const { folderStructure, reset } = useFolderStructureStore();
@@ -47,10 +51,13 @@ export default function Project() {
 
   const fetchProjectDetails = async () => {
     try {
+      setIsLoading(true);
       const res = await getProjectDetails({ project_id });
       setProjectData(res.project);
     } catch (error) {
       console.error("Error fetching project details", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,12 +66,19 @@ export default function Project() {
     fetchProjectDetails();
   }, [project_id]);
 
-  const uploadEnabled = folderStructure.some((str) =>
-    str.files.some((f) => f.type === "contract"),
-  );
+  const uploadEnabled =
+    folderStructure.some((str) =>
+      str.files.some((f) => f.type === "contract"),
+    ) && !isUploading;
 
   const handleUpload = async () => {
-    if (!uploadEnabled) return;
+    if (!uploadEnabled) {
+      setUploadError(
+        "Create a folder and add atleast one contract to that folder to start uploading",
+      );
+      return;
+    }
+    setUploadError(null);
     try {
       setIsUploading(true);
 
@@ -93,6 +107,8 @@ export default function Project() {
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     try {
+      setIsGlobalConfigloading(true);
+
       const file = e.target.files?.[0];
 
       if (!file) return;
@@ -108,7 +124,7 @@ export default function Project() {
         await deleteDocument({
           doc_id: configId,
           doc_type: "config",
-          project_id
+          project_id,
         });
       }
 
@@ -126,20 +142,28 @@ export default function Project() {
     } catch (error) {
       console.error(error);
     } finally {
-      setIsUploading(false);
+      setIsGlobalConfigloading(false);
     }
   };
 
   const handleRunAssessmentAndGenerateRiskSummary = async () => {
     try {
+      setIsGeneratingSummary(true);
       const payload = {
         project_id,
       };
-      await runAssessmentAndGenerateRiskSummary(payload);
-      fetchProjectDetails();
-      setView("risk-assessment");
+      const res = await runAssessmentAndGenerateRiskSummary(payload);
+      if (res.data.status_code === 202) {
+        console.log(res, "res");
+        setTimeout(() => handleRunAssessmentAndGenerateRiskSummary(), 30000);
+      } else {
+        fetchProjectDetails();
+        setView("risk-assessment");
+        setIsGeneratingSummary(false);
+      }
     } catch (error) {
       console.error("Upload failed:", error);
+      setIsGeneratingSummary(false);
     }
   };
 
@@ -168,11 +192,13 @@ export default function Project() {
     }
   };
 
-  if (!projectData) return <>No data found</>;
+  // if (isLoading) return <>Loading......</>;
 
   const handleSwitchView = (view: "project-details" | "risk-assessment") => {
     setView(view);
   };
+
+  if (!projectData) return <>No data found</>;
 
   return (
     <div className="flex flex-col w-full h-full px-4 py-2">
@@ -180,16 +206,25 @@ export default function Project() {
         <section className="flex items-start gap-4 mb-2">
           {projectData.risk_summary && (
             <button
-              className={`text-white px-4 py-2 rounded ${view === "project-details" ? "bg-gray-500 cursor-not-allowed" : "bg-green-500 cursor-pointer"}`}
+              // className={`text-white px-4 py-2 rounded ${view === "project-details" ? "bg-gray-500 cursor-not-allowed" : "bg-green-500 cursor-pointer"}`}
               onClick={() => handleSwitchView("project-details")}
               disabled={view === "project-details"}
+              className={`rounded-md text-sm px-4 py-2 font-medium text-white transition active:scale-95 cursor-pointer  ${
+                view === "project-details"
+                  ? "bg-gray-600 hover:bg-gray-700"
+                  : "bg-green-500 hover:bg-green-600"
+              }`}
             >
               Show Project Details
             </button>
           )}
           {projectData.risk_summary && (
             <button
-              className={`text-white px-4 py-2 rounded ${view === "risk-assessment" ? "bg-gray-500 cursor-not-allowed" : "bg-green-500 cursor-pointer"}`}
+              className={`rounded-md text-sm px-4 py-2 font-medium text-white transition active:scale-95 cursor-pointer  ${
+                view === "risk-assessment"
+                  ? "bg-gray-600 hover:bg-gray-700"
+                  : "bg-green-500 hover:bg-green-600"
+              }`}
               onClick={() => handleSwitchView("risk-assessment")}
             >
               Show Risk Assessment
@@ -197,22 +232,46 @@ export default function Project() {
           )}
           <button
             onClick={handleRunAssessmentAndGenerateRiskSummary}
-            className={`text-white px-4 py-2 rounded ${
+            className={`rounded-md text-sm px-4 py-2 font-medium text-white transition active:scale-95 cursor-pointer  ${
               !projectData.folder_structure.some((str) =>
                 str.files.some((f) => f.type === "contract"),
-              )
-                ? "bg-gray-500 cursor-not-allowed"
-                : "bg-green-500 cursor-pointer"
+              ) ||
+              isGeneratingSummary ||
+              isUploading ||
+              isGlobalConfigUploading ||
+              isLoading
+                ? "bg-gray-600 hover:bg-gray-700"
+                : "bg-green-500 hover:bg-green-600"
             }`}
+            disabled={
+              isGeneratingSummary ||
+              isUploading ||
+              isGlobalConfigUploading ||
+              isLoading
+            }
           >
-            {projectData.risk_summary
-              ? "Re-Generate Risk Summary"
-              : "Generate Risk Summary"}
+            {isGeneratingSummary && projectData.risk_summary
+              ? "Re-Generating Risk Summary..."
+              : !isGeneratingSummary && projectData.risk_summary
+                ? "Re-Generate Risk Summary"
+                : isGeneratingSummary && !projectData.risk_summary
+                  ? "Generating Risk Summary..."
+                  : "Generate Risk Summary"}
           </button>
           {projectData.risk_summary && (
             <button
               onClick={handleDownloadRiskSummary}
-              className={`text-white px-4 py-2 rounded ${!projectData.risk_summary ? "bg-gray-500 cursor-not-allowed" : "bg-green-500 cursor-pointer"}`}
+              className={`rounded-md text-sm px-4 py-2 font-medium text-white transition active:scale-95 cursor-pointer  ${
+                !projectData.risk_summary || isGeneratingSummary
+                  ? "bg-gray-600 hover:bg-gray-700"
+                  : "bg-green-500 hover:bg-green-600"
+              }`}
+              disabled={
+                isGeneratingSummary ||
+                isUploading ||
+                isGlobalConfigUploading ||
+                isLoading
+              }
             >
               Download Risk Summary (pdf)
             </button>
@@ -222,9 +281,9 @@ export default function Project() {
 
       <section className="mt-4">
         {projectData.project.project_name && (
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-2">
             <h1>
-              Project Name:{" "}
+              <b>Project Name: </b>
               <span className="text-gray-700">
                 {projectData.project.project_name}
               </span>
@@ -253,78 +312,91 @@ export default function Project() {
         <section
           className={`${projectData.folder_structure.length > 0 ? "grid grid-cols-2 gap-6" : ""}`}
         >
-          {projectData.folder_structure.length > 0 && (
+          {isLoading && <>Loading...</>}
+          {!isLoading && projectData.folder_structure.length > 0 && (
             <div className="flex flex-col max-h-[65vh] overflow-auto">
               <button
                 onClick={() => handleTriggerGlobalConfigUpload()}
-                className="text-white px-4 py-2 rounded bg-green-500 cursor-pointer"
+                disabled={
+                  isLoading || isGlobalConfigUploading || isGeneratingSummary
+                }
+                className={`rounded-md px-2 py-2 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${
+                  isLoading || isGlobalConfigUploading || isGeneratingSummary
+                    ? "bg-gray-600 hover:bg-gray-700"
+                    : "bg-green-500 hover:bg-green-600"
+                }`}
               >
                 {!projectData.folder_structure.some(
                   (str) => str.folderName === "",
                 ) &&
-                  !isUploading &&
+                  !isGlobalConfigUploading &&
                   "Upload Global Config File"}
                 {!projectData.folder_structure.some(
                   (str) => str.folderName === "",
                 ) &&
-                  isUploading &&
+                  isGlobalConfigUploading &&
                   "Uploading Global Config File..."}
                 {projectData.folder_structure.some(
                   (str) => str.folderName === "",
                 ) &&
-                  !isUploading &&
+                  !isGlobalConfigUploading &&
                   "Replace Global Config File"}
                 {projectData.folder_structure.some(
                   (str) => str.folderName === "",
                 ) &&
-                  isUploading &&
+                  isGlobalConfigUploading &&
                   "Replacing Global Config File..."}
               </button>
               <UploadedFolderStructure
                 folder_structure={projectData.folder_structure}
                 refreshUIFunc={fetchProjectDetails}
+                isDisabled={isGlobalConfigUploading || isGeneratingSummary}
               />
             </div>
           )}
           <div className="flex flex-col max-h-[65vh] overflow-auto">
             <div className="flex gap-2">
               {" "}
-              {!(projectData.folder_structure.length > 0) && (
+              {projectData.folder_structure.length === 0 && (
                 <button
                   onClick={() => handleTriggerGlobalConfigUpload()}
-                  className="text-white px-4 py-2 rounded h-full bg-green-500 cursor-pointer w-full"
+                  className="rounded-md bg-green-500 px-2 py-2 text-sm font-medium text-white transition hover:bg-green-600 active:scale-95 cursor-pointer w-full"
                 >
                   {!projectData.folder_structure.some(
                     (str) => str.folderName === "",
                   ) &&
-                    !isUploading &&
+                    !isGlobalConfigUploading &&
                     "Upload Global Config File"}
                   {!projectData.folder_structure.some(
                     (str) => str.folderName === "",
                   ) &&
-                    isUploading &&
+                    isGlobalConfigUploading &&
                     "Uploading Global Config File..."}
                   {projectData.folder_structure.some(
                     (str) => str.folderName === "",
                   ) &&
-                    !isUploading &&
+                    !isGlobalConfigUploading &&
                     "Replace Global Config File"}
                   {projectData.folder_structure.some(
                     (str) => str.folderName === "",
                   ) &&
-                    isUploading &&
+                    isGlobalConfigUploading &&
                     "Replacing Global Config File..."}
                 </button>
               )}
               <button
                 onClick={handleUpload}
-                disabled={isUploading || !uploadEnabled}
-                className={`text-white px-4 py-2 rounded w-full ${uploadEnabled ? "bg-green-500 cursor-pointer" : "bg-gray-600 cursor-not-allowed"}`}
+                disabled={isUploading || isGeneratingSummary}
+                className={`rounded-md px-2 py-2 text-sm font-medium text-white transition  active:scale-95 cursor-pointer w-full ${uploadEnabled && !isGeneratingSummary ? "bg-green-500 hover:bg-green-600" : "bg-gray-600 hover:bg-gray-700"}`}
               >
                 {isUploading ? "Uploading..." : "Upload"}
               </button>
             </div>
-            <FolderStructure />
+            {uploadError && <p className="text-red-600">{uploadError}</p>}
+            <FolderStructure
+              setUploadError={setUploadError}
+              isDisabled={isUploading || isGeneratingSummary}
+            />
           </div>
         </section>
       ) : (

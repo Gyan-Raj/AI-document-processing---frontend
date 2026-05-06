@@ -4,7 +4,7 @@ import CreateProject from "./CreateProject";
 
 export default function Dashboard() {
   return (
-    <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+    <div className="flex w-full p-2 h-[calc(100vh-4rem)]">
       <CreateProject />
     </div>
   );
