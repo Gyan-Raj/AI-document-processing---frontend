@@ -35,7 +35,7 @@ export default function ProtectedLayout({
     check();
   }, []);
 
-  if (checking) return <div>Loading...</div>;
+  // if (checking) return <div>Loading...</div>;
   if (!allowed) return null;
   const handleLogout = async () => {
     try {

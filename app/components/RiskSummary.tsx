@@ -27,7 +27,7 @@ export type RiskSummaryProps = {
 export default function RiskSummary({ data, meta }: RiskSummaryProps) {
   const [expandedRow, setExpandedRow] = useState<number | null>(null);
   return (
-    <div className="flex flex-col max-h-[65vh] overflow-auto gap-2">
+    <div className="flex flex-col h-full overflow-auto gap-2">
       {/* 🔹 Summary */}
       <div className="p-4 border rounded-lg shadow-sm bg-white">
         <h2 className="text-xl font-semibold mb-2">Summary</h2>

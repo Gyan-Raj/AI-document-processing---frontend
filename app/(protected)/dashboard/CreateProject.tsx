@@ -8,7 +8,6 @@ import {
   getRecentProjects,
 } from "@/services/project.service";
 import { ProjectType } from "../all-projects/page";
-import { formatDateToLocal } from "../../../utils/helper";
 import ProjectsTable from "@/app/components/ProjectsTable";
 
 export default function CreateProject() {
@@ -17,13 +16,17 @@ export default function CreateProject() {
   const [projectName, setProjectName] = useState("");
   const [error, setError] = useState("");
   const [projects, setProjects] = useState<ProjectType[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const fetchAllProjects = async () => {
     try {
+      setIsLoading(true);
       const res = await getRecentProjects();
       setProjects(res.projects);
     } catch (error) {
       console.error("Error fetching projects", error);
+    } finally {
+      setIsLoading(false);
     }
   };
   useEffect(() => {
@@ -95,6 +98,7 @@ export default function CreateProject() {
             projects={projects}
             handleDeleteProject={handleDeleteProject}
             handleSelectProject={handleSelectProject}
+            isLoading={isLoading}
           />
         </div>
       </div>

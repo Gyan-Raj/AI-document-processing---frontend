@@ -74,23 +74,19 @@ export default function AllProjects() {
         disabled={isSearching}
         placeholder="Search through the projects based on project_id, or project_name"
       />
-      {projects.length <= 0 ? (
-        <>
-          {isSearching ? "Searching..." : "No project to show"}
-          <button
-            className="bg-gray-400 cursor-pointer text-white py-2 mt-2 disabled:opacity-50"
-            onClick={() => router.push("/dashboard")}
-          >
-            + Create project
-          </button>
-        </>
-      ) : (
-        <ProjectsTable
-          projects={projects}
-          handleDeleteProject={handleDeleteProject}
-          handleSelectProject={handleSelectProject}
-        />
-      )}
+      <button
+        className="bg-gray-400 cursor-pointer text-white py-2 mt-2 disabled:opacity-50"
+        onClick={() => router.push("/dashboard")}
+      >
+        + Create project
+      </button>
+
+      <ProjectsTable
+        projects={projects}
+        isLoading={isLoading}
+        handleDeleteProject={handleDeleteProject}
+        handleSelectProject={handleSelectProject}
+      />
     </div>
   );
 }

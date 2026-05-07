@@ -29,9 +29,15 @@ export default function Login() {
     try {
       await login(userDetails);
       // ✅ After login, verify and populate store
-      const res = await axiosInstance.get("/get-me");
-      setUserInfo(res.data.data);
-      router.replace("/dashboard");
+      try {
+        const res = await axiosInstance.get("/get-me");
+        setUserInfo(res.data.data);
+        router.replace("/dashboard");
+      } catch (error) {
+        setError(
+          "Your browser is blocking required authentication cookies. Please allow cookies for this site and try logging in again",
+        );
+      }
     } catch (err: any) {
       setError(err?.detail || "Invalid credentials. Please try again.");
     } finally {

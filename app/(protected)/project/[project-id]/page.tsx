@@ -41,6 +41,27 @@ export default function Project() {
   const [uploadError, setUploadError] = useState<null | string>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [showDownloadPopup, setShowDownloadPopup] = useState(false);
+  const popUpRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        popUpRef.current &&
+        !popUpRef.current.contains(event.target as Node)
+      ) {
+        setShowDownloadPopup(false);
+      }
+    };
+
+    if (showDownloadPopup) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDownloadPopup]);
 
   const { folderStructure, reset } = useFolderStructureStore();
 
@@ -167,11 +188,11 @@ export default function Project() {
     }
   };
 
-  const handleDownloadRiskSummary = async () => {
+  const handleDownloadRiskSummary = async (type: "pdf" | "docx") => {
     try {
       const payload = {
         project_id,
-        type: "pdf",
+        type,
       };
       if (!projectData?.risk_summary) return;
       const res = await downloadRiskSummary(payload);
@@ -191,8 +212,6 @@ export default function Project() {
       console.error("Upload failed:", error);
     }
   };
-
-  // if (isLoading) return <>Loading......</>;
 
   const handleSwitchView = (view: "project-details" | "risk-assessment") => {
     setView(view);
@@ -260,7 +279,7 @@ export default function Project() {
           </button>
           {projectData.risk_summary && (
             <button
-              onClick={handleDownloadRiskSummary}
+              onClick={() => setShowDownloadPopup((prev) => !prev)}
               className={`rounded-md text-sm px-4 py-2 font-medium text-white transition active:scale-95 cursor-pointer  ${
                 !projectData.risk_summary || isGeneratingSummary
                   ? "bg-gray-600 hover:bg-gray-700"
@@ -273,7 +292,7 @@ export default function Project() {
                 isLoading
               }
             >
-              Download Risk Summary (pdf)
+              Download Risk Summary
             </button>
           )}
         </section>
@@ -312,7 +331,7 @@ export default function Project() {
         <section
           className={`${projectData.folder_structure.length > 0 ? "grid grid-cols-2 gap-6" : ""}`}
         >
-          {isLoading && <>Loading...</>}
+          {isLoading && <>Fetching project details...</>}
           {!isLoading && projectData.folder_structure.length > 0 && (
             <div className="flex flex-col max-h-[65vh] overflow-auto">
               <button
@@ -401,10 +420,12 @@ export default function Project() {
         </section>
       ) : (
         projectData.risk_summary && (
-          <RiskSummary
-            data={projectData.risk_summary.data}
-            meta={projectData.risk_summary.meta}
-          />
+          <div className="max-h-[75vh] border border-gray-200 p-1 rounded-xl">
+            <RiskSummary
+              data={projectData.risk_summary.data}
+              meta={projectData.risk_summary.meta}
+            />
+          </div>
         )
       )}
       <input
@@ -414,6 +435,25 @@ export default function Project() {
         className="hidden"
         multiple={false}
       />
+      {showDownloadPopup && (
+        <div
+          ref={popUpRef}
+          className="absolute right-25 mt-6 rounded-md bg-white shadow-lg z-50 p-1 divide-y divide-gray-400"
+        >
+          <button
+            onClick={() => handleDownloadRiskSummary("pdf")}
+            className="rounded w-full px-3 py-1 text-sm hover:bg-green-500 hover:text-white text-left cursor-pointer"
+          >
+            PDF
+          </button>
+          <button
+            onClick={() => handleDownloadRiskSummary("docx")}
+            className="rounded w-full px-3 py-1 text-sm hover:bg-green-500 hover:text-white text-left cursor-pointer"
+          >
+            DOCX
+          </button>
+        </div>
+      )}
     </div>
   );
 }
