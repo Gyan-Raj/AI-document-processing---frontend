@@ -9,6 +9,7 @@ import {
 } from "@/services/project.service";
 import { ProjectType } from "../all-projects/page";
 import ProjectsTable from "@/app/components/ProjectsTable";
+import { ButtonWithSpinner } from "@/app/components/ButtonWithSpinner";
 
 export default function CreateProject() {
   const router = useRouter();
@@ -17,6 +18,9 @@ export default function CreateProject() {
   const [error, setError] = useState("");
   const [projects, setProjects] = useState<ProjectType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [isProjectActionDisabled, setIsProjectActionDisabled] =
+    useState<boolean>(false);
 
   const fetchAllProjects = async () => {
     try {
@@ -38,11 +42,14 @@ export default function CreateProject() {
       return;
     }
     try {
+      setIsCreating(true);
       const res = await createProject({ project_name: projectName });
       const projectId = res.project.id;
       router.push(`/project/${projectId}`);
     } catch (error) {
       console.error("Logout failed:", error);
+    } finally {
+      setIsCreating(false);
     }
   };
   const handleSeeAllProjects = async () => {
@@ -54,11 +61,15 @@ export default function CreateProject() {
   };
 
   const handleDeleteProject = async (project_id: string) => {
+    if (!project_id) return;
+    setIsProjectActionDisabled(true);
     try {
       await deleteProject({ project_id });
       await fetchAllProjects();
     } catch (error) {
       console.error("Logout failed:", error);
+    } finally {
+      setIsProjectActionDisabled(false);
     }
   };
 
@@ -79,31 +90,33 @@ export default function CreateProject() {
               handleCreateProject();
             }
           }}
+          disabled={isCreating}
         />
-        <button
+        <ButtonWithSpinner
+          text="+ Create Project"
+          loadingText="Creating new project"
           onClick={handleCreateProject}
-          className="bg-green-400  text-white px-4 py-0 rounded cursor-pointer w-[30%]  transition hover:bg-green-600 active:scale-95 "
-        >
-          + Create Project
-        </button>
+          isLoading={isCreating}
+          className="w-[30%]"
+        />
       </div>
       {error && <p className="text-red-600">{error}</p>}
       <div className="mt-2 p-2 border border-gray-400 rounded-xl">
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <b>Your last 10 projects:</b>
-            <button
+            <ButtonWithSpinner
+              text="View All Projects"
               onClick={handleSeeAllProjects}
-              className="bg-green-400  text-white px-4 py-1 rounded cursor-pointer w-[30%]  transition hover:bg-green-600 active:scale-95 "
-            >
-              View All Projects
-            </button>
+              className="w-[30%]"
+            />
           </div>
           <ProjectsTable
             projects={projects}
             handleDeleteProject={handleDeleteProject}
             handleSelectProject={handleSelectProject}
             isLoading={isLoading}
+            isActionDisabled={isProjectActionDisabled}
           />
         </div>
       </div>

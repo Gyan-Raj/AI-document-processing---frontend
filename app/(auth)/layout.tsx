@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserDetails } from "@/store/auth.store";
 import axiosInstance from "@/lib/api/axios-instance";
+import { FullScreenLoader } from "@/app/components/ui/FullSCreenLoader";
 
 export default function AuthLayout({
   children,
@@ -34,7 +35,7 @@ export default function AuthLayout({
     check();
   }, []);
 
-  if (checking) return <div>Loading...</div>;
+  if (checking) return <FullScreenLoader />;
   if (!allowed) return null;
 
   return <>{children}</>;

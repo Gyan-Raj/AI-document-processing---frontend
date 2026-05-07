@@ -373,8 +373,8 @@ export default function Project() {
               />
             </div>
           )}
-          <div className="block bg-black h-px my-4 md:hidden"></div>
-          <div className="flex flex-col max-h-[65vh] overflow-auto">
+          {/* <div className="block bg-black h-px my-4 md:hidden"></div> */}
+          <div className="flex flex-col max-h-[65vh] mt-2 overflow-auto">
             <div className="flex gap-2">
               {" "}
               {projectData.folder_structure.length === 0 && (

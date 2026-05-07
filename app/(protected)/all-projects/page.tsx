@@ -1,5 +1,6 @@
 "use client";
 
+import { ButtonWithSpinner } from "@/app/components/ButtonWithSpinner";
 import ProjectsTable from "@/app/components/ProjectsTable";
 import useDebounce from "@/hooks/useDebounce";
 import {
@@ -23,6 +24,8 @@ export default function AllProjects() {
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [queryText, setQueryText] = useState<string | null>("");
   const router = useRouter();
+  const [isProjectActionDisabled, setIsProjectActionDisabled] =
+    useState<boolean>(false);
 
   const debouncedSearch = useDebounce(queryText ?? "", 500);
 
@@ -54,11 +57,15 @@ export default function AllProjects() {
   };
 
   const handleDeleteProject = async (project_id: string) => {
+    if (!project_id) return;
+    setIsProjectActionDisabled(true);
     try {
       await deleteProject({ project_id });
       await fetchAllProjects();
     } catch (error) {
       console.error("Logout failed:", error);
+    } finally {
+      setIsProjectActionDisabled(false);
     }
   };
 
@@ -68,24 +75,24 @@ export default function AllProjects() {
         type="text"
         name="user_name"
         id="user_name"
-        className="focus:outline-0 border border-gray-400 w-full px-2 py-1 rounded-xl mb-2"
+        className="focus:outline-0 border border-gray-400 w-full px-2 py-1 rounded-xl"
         value={queryText ?? ""}
         onChange={(e) => setQueryText(e.target.value)}
-        disabled={isSearching}
+        // disabled={isSearching}
         placeholder="Search through the projects based on project_id, or project_name"
       />
-      <button
-        className="bg-gray-400 cursor-pointer text-white py-2 mt-2 disabled:opacity-50"
+      <ButtonWithSpinner
+        text="+ Create Project"
         onClick={() => router.push("/dashboard")}
-      >
-        + Create project
-      </button>
+        className="w-full my-2"
+      />
 
       <ProjectsTable
         projects={projects}
-        isLoading={isLoading}
+        isLoading={isLoading || isSearching}
         handleDeleteProject={handleDeleteProject}
         handleSelectProject={handleSelectProject}
+        isActionDisabled={isProjectActionDisabled}
       />
     </div>
   );

@@ -1,10 +1,12 @@
 "use client";
+import { ButtonWithSpinner } from "@/app/components/ButtonWithSpinner";
 import { signup } from "@/services/auth.service";
 import Link from "next/link";
 import { useState } from "react";
 
 export default function SignUp() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
   const [userDetails, setUserDetails] = useState({
     user_name: "",
     user_email: "",
@@ -22,14 +24,21 @@ export default function SignUp() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (
+      !userDetails.user_email ||
+      !userDetails.user_name ||
+      !userDetails.user_password
+    ) {
+      setError("Please fill name, email and password");
+      return;
+    }
     setIsSubmitting(true);
+    setError("");
 
     try {
-      const res = await signup(userDetails);
-      // 👉 redirect or show success
-    } catch (error: any) {
-      console.error("Signup failed:", error);
-      // 👉 show error to user
+      await signup(userDetails);
+    } catch (err: any) {
+      setError(err?.detail || "Something went wrong, please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -47,6 +56,7 @@ export default function SignUp() {
         className="w-[60%] border border-gray-400 flex flex-col justify-center gap-6 p-4"
         onSubmit={handleSignUp}
       >
+        {error && <p className="text-red-500 text-sm">{error}</p>}{" "}
         <div className="flex flex-col justify-center gap-2">
           <label htmlFor="user_name">Name</label>
           <input
@@ -83,13 +93,12 @@ export default function SignUp() {
             disabled={isSubmitting}
           />
         </div>
-        <button
+        <ButtonWithSpinner
+          text="Sign up"
+          loadingText="Signing up..."
+          isLoading={isSubmitting}
           type="submit"
-          className="bg-gray-900 cursor-pointer text-white py-2"
-          disabled={isSubmitting}
-        >
-          Sign Up
-        </button>
+        />
       </form>
     </div>
   );

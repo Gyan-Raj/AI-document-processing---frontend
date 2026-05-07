@@ -1,4 +1,5 @@
 "use client";
+import { ButtonWithSpinner } from "@/app/components/ButtonWithSpinner";
 import axiosInstance from "@/lib/api/axios-instance";
 import { login } from "@/services/auth.service";
 import { useUserDetails } from "@/store/auth.store";
@@ -23,6 +24,10 @@ export default function Login() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!userDetails.user_email || !userDetails.user_password) {
+      setError("Please fill in both email and password");
+      return;
+    }
     setIsSubmitting(true);
     setError("");
 
@@ -83,13 +88,12 @@ export default function Login() {
             disabled={isSubmitting}
           />
         </div>
-        <button
+        <ButtonWithSpinner
+          text="Login"
+          loadingText="Logging in..."
+          isLoading={isSubmitting}
           type="submit"
-          className="bg-gray-900 cursor-pointer text-white py-2 disabled:opacity-50"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Logging in..." : "Login"}
-        </button>
+        />
       </form>
     </div>
   );
