@@ -74,6 +74,11 @@ export default function CreateProject() {
           onChange={(e) => setProjectName(e.target.value)}
           placeholder="Give a project name"
           onFocus={() => setError("")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleCreateProject();
+            }
+          }}
         />
         <button
           onClick={handleCreateProject}

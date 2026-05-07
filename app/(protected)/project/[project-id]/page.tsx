@@ -329,7 +329,7 @@ export default function Project() {
       </section>
       {view === "project-details" ? (
         <section
-          className={`${projectData.folder_structure.length > 0 ? "grid grid-cols-2 gap-6" : ""}`}
+          className={`${projectData.folder_structure.length > 0 ? "grid grid-cols-1 md:grid-cols-2 gap-6" : ""}`}
         >
           {isLoading && <>Fetching project details...</>}
           {!isLoading && projectData.folder_structure.length > 0 && (
@@ -373,6 +373,7 @@ export default function Project() {
               />
             </div>
           )}
+          <div className="block bg-black h-px my-4 md:hidden"></div>
           <div className="flex flex-col max-h-[65vh] overflow-auto">
             <div className="flex gap-2">
               {" "}
