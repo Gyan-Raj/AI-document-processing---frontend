@@ -256,31 +256,26 @@ export default function Project() {
           {projectData.folder_structure.some((str) =>
             str.files.some((f) => f.type === "contract"),
           ) && (
-            <button
-              onClick={handleRunAssessmentAndGenerateRiskSummary}
-              className={`rounded-md text-sm px-4 py-2 font-medium text-white transition active:scale-95 cursor-pointer  ${
-                isGeneratingSummary ||
-                isUploading ||
-                isGlobalConfigUploading ||
-                isLoading
-                  ? "bg-gray-600 hover:bg-gray-700"
-                  : "bg-green-500 hover:bg-green-600"
+            <ButtonWithSpinner
+              text={`${
+                !isGeneratingSummary && projectData.risk_summary
+                  ? "Re-Generate Risk Summary"
+                  : "Generate Risk Summary"
               }`}
+              loadingText={`${
+                isGeneratingSummary && projectData.risk_summary
+                  ? "Re-Generating Risk Summary..."
+                  : "Generating Risk Summary..."
+              }`}
+              onClick={handleRunAssessmentAndGenerateRiskSummary}
               disabled={
                 isGeneratingSummary ||
                 isUploading ||
                 isGlobalConfigUploading ||
                 isLoading
               }
-            >
-              {isGeneratingSummary && projectData.risk_summary
-                ? "Re-Generating Risk Summary..."
-                : !isGeneratingSummary && projectData.risk_summary
-                  ? "Re-Generate Risk Summary"
-                  : isGeneratingSummary && !projectData.risk_summary
-                    ? "Generating Risk Summary..."
-                    : "Generate Risk Summary"}
-            </button>
+              isLoading={isGeneratingSummary || isUploading}
+            />
           )}
 
           {projectData.risk_summary && (
