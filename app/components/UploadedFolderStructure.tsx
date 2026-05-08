@@ -4,6 +4,7 @@ import { deleteDocument, uploadDocument } from "@/services/project.service";
 import { FolderStructureTypes } from "@/store/folderStructure.store";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
+import { ButtonWithSpinner } from "./ButtonWithSpinner";
 
 type FileType = {
   id?: string;
@@ -37,8 +38,16 @@ export default function UploadedFolderStructure({
   const [activeType, setActiveType] = useState<"contract" | "config" | null>(
     null,
   );
+  const [activeFileId, setActiveFileId] = useState<string | null>(null);
+
+  console.log(isLoading, "isLoading");
 
   const handleDeleteFolder = async (folderName: string) => {
+    if (!folderName) return;
+    setActiveFolder(folderName);
+    setIsLoading(true);
+    setActiveType(null);
+
     try {
       const folder = folder_structure.find(
         (str) => str.folderName === folderName,
@@ -58,6 +67,9 @@ export default function UploadedFolderStructure({
       refreshUIFunc && refreshUIFunc();
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsLoading(false);
+      setActiveFolder(null);
     }
   };
 
@@ -80,6 +92,9 @@ export default function UploadedFolderStructure({
     doc_id: string,
     doc_type: "contract" | "config",
   ) => {
+    if (!doc_id || !doc_type) return;
+    setActiveFileId(doc_id);
+    setIsLoading(true);
     try {
       await deleteDocument({
         doc_id,
@@ -90,67 +105,78 @@ export default function UploadedFolderStructure({
     } catch (error) {
       console.error(error);
     } finally {
+      setIsLoading(false);
+      setActiveFileId(null);
     }
   };
 
   // ✅ File Select
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!project_id) return;
-    const files = e.target.files;
+    setIsLoading(true);
+    try {
+      const files = e.target.files;
+      if (!files || !activeFolder || !activeType) return;
 
-    if (!files || !activeFolder || !activeType) return;
-    let folderStructure: FolderStructureTypes[] = [];
-    if (activeType === "config") {
-      // replace config
-      if (files[0]) {
-        const folder = folder_structure.find(
-          (f) => f.folderName === activeFolder,
-        );
-        const configFile = folder?.files.find((file) => file.type === "config");
+      let folderStructure: FolderStructureTypes[] = [];
+      if (activeType === "config") {
+        // replace config
+        if (files[0]) {
+          const folder = folder_structure.find(
+            (f) => f.folderName === activeFolder,
+          );
+          const configFile = folder?.files.find(
+            (file) => file.type === "config",
+          );
 
-        const hasConfig = !!configFile;
-        if (hasConfig) {
-          const configId = configFile?.id;
-          await deleteDocument({
-            doc_id: configId,
-            doc_type: activeType,
-            project_id,
+          const hasConfig = !!configFile;
+          if (hasConfig) {
+            const configId = configFile?.id;
+            await deleteDocument({
+              doc_id: configId,
+              doc_type: activeType,
+              project_id,
+            });
+          }
+
+          folderStructure.push({
+            folderName: activeFolder,
+            files: [
+              {
+                file: files[0],
+                fileName: files[0].name,
+                type: "config",
+              },
+            ],
           });
         }
+      }
+
+      if (activeType === "contract") {
+        const newFiles: FileType[] = Array.from(files).map((file) => ({
+          file,
+          fileName: file.name,
+          type: "contract",
+        }));
 
         folderStructure.push({
           folderName: activeFolder,
-          files: [
-            {
-              file: files[0],
-              fileName: files[0].name,
-              type: "config",
-            },
-          ],
+          files: newFiles,
         });
       }
-    }
-
-    if (activeType === "contract") {
-      const newFiles: FileType[] = Array.from(files).map((file) => ({
-        file,
-        fileName: file.name,
-        type: "contract",
-      }));
-
-      folderStructure.push({
-        folderName: activeFolder,
-        files: newFiles,
+      await uploadDocument({
+        project_id,
+        folderStructure,
       });
-    }
-    await uploadDocument({
-      project_id,
-      folderStructure,
-    });
 
-    setActiveFolder(null);
-    setActiveType(null);
-    refreshUIFunc && refreshUIFunc();
+      setActiveFolder(null);
+      setActiveType(null);
+      refreshUIFunc && refreshUIFunc();
+    } catch (error) {
+      console.error("Error uploading file", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!project_id) return <>Loading...</>;
@@ -165,35 +191,49 @@ export default function UploadedFolderStructure({
 
               {str.folderName && (
                 <div className="flex gap-2">
-                  <button
+                  <ButtonWithSpinner
+                    text="Add contract"
+                    loadingText="Uploading contract..."
+                    isLoading={
+                      isLoading &&
+                      activeFolder === str.folderName &&
+                      activeType === "contract"
+                    }
+                    disabled={isDisabled}
                     onClick={() =>
                       handleTriggerUpload(str.folderName, "contract")
                     }
-                    disabled={isLoading || isDisabled}
-                    className={`rounded-md px-2 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isLoading || isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-green-500 hover:bg-green-600"}`}
-                  >
-                    Add contract
-                  </button>
+                  />
 
-                  <button
+                  <ButtonWithSpinner
+                    text={
+                      str.files.some((f) => f.type === "config")
+                        ? "Replace config file"
+                        : "Add config file"
+                    }
+                    loadingText="Uploading config..."
+                    isLoading={
+                      isLoading &&
+                      activeFolder === str.folderName &&
+                      activeType === "config"
+                    }
+                    disabled={isDisabled}
                     onClick={() =>
                       handleTriggerUpload(str.folderName, "config")
                     }
-                    className={`rounded-md px-2 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isLoading || isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-green-500 hover:bg-green-600"}`}
-                    disabled={isLoading || isDisabled}
-                  >
-                    {str.files.some((f) => f.type === "config")
-                      ? "Replace config file"
-                      : "Add config file"}
-                  </button>
-
-                  <button
+                  />
+                  <ButtonWithSpinner
+                    text="Delete folder"
+                    loadingText="Deleting folder..."
+                    isLoading={
+                      isLoading &&
+                      activeFolder === str.folderName &&
+                      activeType === null
+                    }
+                    disabled={isDisabled || activeFolder === str.folderName}
                     onClick={() => handleDeleteFolder(str.folderName)}
-                    className={`rounded-md px-2 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isLoading || isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-green-500 hover:bg-green-600"}`}
-                    disabled={isLoading || isDisabled}
-                  >
-                    Delete Folder
-                  </button>
+                    variant="danger"
+                  />
                 </div>
               )}
             </div>
@@ -206,13 +246,13 @@ export default function UploadedFolderStructure({
                 >
                   <div className="flex justify-between">
                     <span>{f.fileName}</span>
-                    <button
-                      className={`rounded-md px-2 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isLoading || isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-red-500 hover:bg-red-600"}`}
+                    <ButtonWithSpinner
+                      text={`Delete ${f.type}`}
+                      loadingText={`Deleting ${f.type}`}
+                      isLoading={isLoading && activeFileId === f.id}
                       onClick={() => f.id && handleDeleteFile(f.id, f.type)}
-                      disabled={isLoading || isDisabled}
-                    >
-                      Delete {f.type}
-                    </button>
+                      variant="danger"
+                    />
                   </div>
                 </li>
               ))}

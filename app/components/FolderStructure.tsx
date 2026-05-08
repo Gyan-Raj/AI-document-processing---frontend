@@ -3,13 +3,16 @@
 import { useFolderStructureStore } from "@/store/folderStructure.store";
 import { useParams } from "next/navigation";
 import { useRef, useState } from "react";
+import { ButtonWithSpinner } from "./ButtonWithSpinner";
 
 export default function FolderStructure({
   setUploadError,
   isDisabled,
+  isLoading,
 }: {
   setUploadError: (val: null | string) => void;
   isDisabled: boolean;
+  isLoading: boolean;
 }) {
   const params = useParams();
   const project_id = Array.isArray(params["project-id"])
@@ -85,7 +88,7 @@ export default function FolderStructure({
     const files = e.target.files;
 
     if (!files || !activeFolder || !activeType) return;
-    if (activeType === "contract") setUploadError(null);
+    setUploadError(null);
     addFile(activeFolder, files, activeType);
 
     setActiveFolder(null);
@@ -130,31 +133,30 @@ export default function FolderStructure({
               <p>{str.folderName}</p>
 
               <div className="flex gap-2">
-                <button
+                <ButtonWithSpinner
+                  text="Add contract"
+                  loadingText="Uploading contract..."
                   onClick={() =>
                     handleTriggerUpload(str.folderName, "contract")
                   }
+                  // isLoading={isLoading}
                   disabled={isDisabled}
-                  className={`rounded-md px-3 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-green-500 hover:bg-green-600"}`}
-                >
-                  Add contract
-                </button>
-
-                <button
+                />
+                <ButtonWithSpinner
+                  text="Add config file"
+                  loadingText="Uploading config..."
                   onClick={() => handleTriggerUpload(str.folderName, "config")}
+                  // isLoading={isLoading}
                   disabled={isDisabled}
-                  className={`rounded-md px-3 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-green-500 hover:bg-green-600"}`}
-                >
-                  Add config file
-                </button>
-
-                <button
+                />
+                <ButtonWithSpinner
+                  text="Delete folder"
+                  loadingText="Deleting folder..."
                   onClick={() => handleDeleteFolder(str.folderName)}
+                  // isLoading={isLoading}
                   disabled={isDisabled}
-                  className={`rounded-md px-3 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-red-500 hover:bg-red-600"}`}
-                >
-                  Delete Folder
-                </button>
+                  variant="danger"
+                />
               </div>
             </div>
 
@@ -166,9 +168,9 @@ export default function FolderStructure({
                 >
                   <div className="flex justify-between">
                     <span>{f.fileName}</span>
-                    <button
-                      disabled={isDisabled}
-                      className={`rounded-md px-3 py-1 text-sm font-medium text-white transition active:scale-95 cursor-pointer ${isDisabled ? "bg-gray-600 hover:bg-gray-700" : "bg-red-500 hover:bg-red-600"}`}
+                    <ButtonWithSpinner
+                      text={`Delete ${f.type}`}
+                      loadingText={`Deleting ${f.type}`}
                       onClick={() =>
                         handleDeleteFile(
                           index,
@@ -177,9 +179,10 @@ export default function FolderStructure({
                           f.type,
                         )
                       }
-                    >
-                      Delete {f.type}
-                    </button>
+                      // isLoading={isLoading}
+                      disabled={isDisabled}
+                      variant="danger"
+                    />
                   </div>
                 </li>
               ))}
